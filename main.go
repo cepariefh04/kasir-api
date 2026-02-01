@@ -131,7 +131,7 @@ func main() {
 
 	// Setup Routes
 	http.HandleFunc("/api/products", productHandler.HandleProducts) // localhost:8080/api/products
-	http.HandleFunc("/api/products/", productHandler.HandleProductsById) // localhost:8080/api/products/{id}
+	http.HandleFunc("/api/products/", productHandler.HandleProductByID) // localhost:8080/api/products/{id}
 
 	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request){

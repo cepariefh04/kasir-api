@@ -21,29 +21,29 @@ func NewProductHandler(service *services.ProductService) *ProductHandler {
 func (h *ProductHandler) HandleProducts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		h.getAllProducts(w, r)
+		h.GetAllProducts(w, r)
 	case http.MethodPost:
-		h.createProduct(w, r)
+		h.CreateProduct(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
 // HandleProducts -> GET/PUT/DELETE /api/products/{id}
-func (h *ProductHandler) HandleProductsById(w http.ResponseWriter, r *http.Request) {
+func (h *ProductHandler) HandleProductByID(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		h.GetProductById(w, r)
-	// case http.MethodPut:
-	// 	h.updateProduct(w, r)
-	// case http.MethodDelete:
-	// 	h.deleteProduct(w, r)
+	case http.MethodPut:
+		h.UpdateProduct(w, r)
+	case http.MethodDelete:
+		h.DeleteProduct(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-func (h *ProductHandler) getAllProducts(w http.ResponseWriter, r *http.Request) {
+func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) {
 	products, err := h.service.GetAllProducts()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,7 +54,7 @@ func (h *ProductHandler) getAllProducts(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(products)
 }
 
-func (h *ProductHandler) createProduct(w http.ResponseWriter, r *http.Request) {
+func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var newProduct models.Product
 	err := json.NewDecoder(r.Body).Decode(&newProduct)
 	if err != nil {
@@ -85,4 +85,51 @@ func (h *ProductHandler) GetProductById(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(product)
+}
+
+func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/products/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		return
+	}
+
+	var product models.Product
+	err = json.NewDecoder(r.Body).Decode(&product)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	product.ID = id
+	err = h.service.UpdateProduct(&product)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(product)
+}
+
+// Delete - DELETE /api/products/{id}
+func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/products/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteProduct(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Product deleted successfully",
+	})
 }
