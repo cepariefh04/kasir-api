@@ -10,93 +10,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/viper"
 )
 
-type Category struct {
-	ID int `json:"id"`
-	Name  string  `json:"name"`
-	Description string `json:"description"`
-}
-
-var categories = []Category{
-	{ID: 1, Name: "Desktop", Description: "Komputer desktop untuk kebutuhan sehari-hari dan gaming."},
-	{ID: 2, Name: "Mobile", Description: "Perangkat mobile seperti smartphone dan tablet."},
-}
-
-
-func getCategoryByID(w http.ResponseWriter, r *http.Request) {
-		idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
-				id, err := strconv.Atoi(idStr)
-				if err != nil {
-					http.Error(w, "ID tidak valid", http.StatusBadRequest)
-					return
-				}
-
-				for _, c := range categories {
-					if c.ID == id {
-						w.Header().Set("Content-Type", "application/json")
-						json.NewEncoder(w).Encode(c)
-						return
-					}
-				}
-
-				http.Error(w, "Category not found!", http.StatusNotFound)
-}
-
-func updateCategoryHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
-	
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
-		return
-	}
-
-	var updateCategory Category
-	err = json.NewDecoder(r.Body).Decode(&updateCategory)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	for i := range categories {
-		if categories[i].ID == id {
-			categories[i].Name = updateCategory.Name
-			categories[i].Description = updateCategory.Description
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(categories[i])
-			return
-		}
-	}
-
-	http.Error(w, "Category not found!", http.StatusNotFound)
-}
-
-func deleteCategoryHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, "ID tidak valid", http.StatusBadRequest)
-		return
-	}
-
-	for i, c := range categories {
-		if c.ID == id {
-			categories = append(categories[:i], categories[i+1:]...)
-
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{
-				"message": "Delete Successfully",
-			})
-			return
-		}
-	}
-	http.Error(w, "Category not found!", http.StatusNotFound)
-}
 
 type Config struct {
 	Port    string `mapstructure:"PORT"`
@@ -129,9 +47,15 @@ func main() {
 	productService := services.NewProductService(productRepo)
 	productHandler := handlers.NewProductHandler(productService)
 
+	categoryRepo := repositories.NewCategoryRepository(db)
+	categoryService := services.NewCategoryService(categoryRepo)
+	categoryHandler := handlers.NewCategoryHandler(categoryService)
+
 	// Setup Routes
 	http.HandleFunc("/api/products", productHandler.HandleProducts) // localhost:8080/api/products
 	http.HandleFunc("/api/products/", productHandler.HandleProductByID) // localhost:8080/api/products/{id}
+	http.HandleFunc("/api/categories", categoryHandler.HandleCategories) // localhost:8080/api/categories
+	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID) // localhost:8080/api/categories/{id}
 
 	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request){

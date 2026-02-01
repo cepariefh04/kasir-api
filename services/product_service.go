@@ -13,7 +13,7 @@ func NewProductService(repo *repositories.ProductRepository) *ProductService {
 	return &ProductService{repo: repo}
 }
 
-func (s *ProductService) GetAllProducts() ([]models.Product, error) {
+func (s *ProductService) GetAllProducts() ([]models.ProductWithCategory, error) {
 	return s.repo.GetAllProducts()
 }
 
@@ -22,8 +22,12 @@ func (s *ProductService) CreateProduct(p *models.Product) error {
 	return s.repo.CreateProduct(p)
 }
 
-func (s *ProductService) GetProductById(id int) (*models.Product, error) {
+func (s *ProductService) GetProductById(id int) (*models.ProductWithCategory, error) {
 	return s.repo.GetProductById(id)
+}
+
+func (s *ProductService) GetProductByIdCategory(id_category int) (*models.ProductWithCategory, error) {
+	return s.repo.GetProductByIdCategory(id_category)
 }
 
 func (s *ProductService) UpdateProduct(product *models.Product) error {
