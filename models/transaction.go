@@ -15,7 +15,7 @@ type TransactionDetail struct {
 	ProductID     int `json:"product_id"`
 	ProductName   string `json:"product_name"`
 	Quantity      int `json:"quantity"`
-	Subtotal         int `json:"price"`
+	Subtotal      int `json:"price"`
 }
 
 type CheckoutItem struct {
@@ -25,4 +25,15 @@ type CheckoutItem struct {
 
 type CheckoutRequest struct {
 	Items []CheckoutItem `json:"items"`
+}
+
+type TransactionReport struct {
+	TotalRevenue       int                `json:"total_revenue"`
+	TotalTransactions  int                `json:"total_transaksi"`
+	BestSellingProduct BestSellingProduct `json:"produk_terlaris"`
+}
+
+type BestSellingProduct struct {
+	Name     string `json:"nama"`
+	Quantity int    `json:"qty_terjual"`
 }

@@ -51,12 +51,25 @@ func main() {
 	categoryService := services.NewCategoryService(categoryRepo)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 
+transactionRepo := repositories.NewTransactionRepository(db)
+	transactionService := services.NewTransactionService(transactionRepo)
+	transactionHandler := handlers.NewTransactionHandler(transactionService)
+
 	// Setup Routes
 	http.HandleFunc("/api/products", productHandler.HandleProducts) // localhost:8080/api/products
 	http.HandleFunc("/api/products/", productHandler.HandleProductByID) // localhost:8080/api/products/{id}
 	http.HandleFunc("/api/categories", categoryHandler.HandleCategories) // localhost:8080/api/categories
 	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID) // localhost:8080/api/categories/{id}
-
+	http.HandleFunc("/api/checkout", transactionHandler.HandleCheckout) // localhost:8080/api/checkout
+	http.HandleFunc("/api/report/hari-ini", transactionHandler.HandleTransactionReport) // localhost:8080/api/transactions/report
+	http.HandleFunc("/api/report", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet {
+				transactionHandler.GetTransactionReportByDate(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		})
+		
 	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request){
 		w.Header().Set("Content-Type", "application/json")
